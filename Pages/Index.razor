@@ -1,0 +1,103 @@
+@page "/"
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject DialogService DialogService
+@inject ContextMenuService ContextMenuService
+@inject TooltipService TooltipService
+@inject NotificationService NotificationService
+<PageTitle>Index</PageTitle>
+<div class="row pt-5 px-5">
+    <RadzenButton Text="New" Style="margin: 5px; width: 138px" Click="@Button0Click"></RadzenButton>
+    <RadzenDataGrid TItem="MyUploadViewModel"
+                    Data="@UploadViewModels" @ref="@theGrid"
+                    EditMode="Radzen.DataGridEditMode.Single"
+                    RowCreate="@DataGrid0RowCreate">
+        <Columns>
+            <RadzenDataGridColumn TItem="MyUploadViewModel" Property="Description" Title="Description">
+                <EditTemplate>
+                    <RadzenTextBox @bind-Value="context.Description"
+                              class="w-100"/>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="MyUploadViewModel" Title="File to upload">
+                <Template>
+                    <InputFile class="form-control"
+                               OnChange="@((InputFileChangeEventArgs e) => OnInputFileChange(e , context))" />
+                </Template>
+                @*    <EditTemplate>
+                <InputFile class="form-control" />
+                </EditTemplate>*@
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="MyUploadViewModel">
+                <Template>
+                    <RadzenButton Icon="edit"
+                                  ButtonStyle="ButtonStyle.Light"
+                                  Variant="Variant.Flat"
+                                  Size="ButtonSize.Small"
+                                  Click="@(async args => await theGrid.EditRow(context))"
+                                  @onclick:stopPropagation="true" />
+                </Template>
+                <EditTemplate>
+                    <RadzenButton Icon="check"
+                                  ButtonStyle="ButtonStyle.Success"
+                                  Variant="Variant.Flat"
+                                  Size="ButtonSize.Medium"
+                                  Click="@((args) => SaveRow(context))" />
+
+                    <RadzenButton Icon="close"
+                                  ButtonStyle="ButtonStyle.Light"
+                                  Variant="Variant.Flat" Size="ButtonSize.Medium"
+                                  Class="my-1 ms-1"
+                                  Click="@((args) => CancelEdit(context))" />
+
+
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+</div>
+
+@code {
+    ICollection<MyUploadViewModel> UploadViewModels;
+    MyUploadViewModel newFile;
+    RadzenDataGrid<MyUploadViewModel> theGrid;
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        UploadViewModels = new List<MyUploadViewModel>();
+
+    }
+
+    private void OnInputFileChange(InputFileChangeEventArgs e, MyUploadViewModel documentBase)
+    {
+        documentBase.FileToUpload= e.File;
+    }
+
+    protected async Task Button0Click(Microsoft.AspNetCore.Components.Web.MouseEventArgs args)
+    {
+        newFile = new MyUploadViewModel();
+        await theGrid.InsertRow(newFile);
+    }
+
+    protected async Task Button1Click(Microsoft.AspNetCore.Components.Web.MouseEventArgs args)
+    {
+        await theGrid.UpdateRow(newFile);
+    }
+
+    protected async Task DataGrid0RowCreate(MyUploadViewModel args)
+    {
+        UploadViewModels.Add(args);
+    }
+
+    async Task SaveRow(MyUploadViewModel order)
+    {
+        await theGrid.UpdateRow(order);
+    }
+    async Task CancelEdit(MyUploadViewModel order)
+    {
+        theGrid.CancelEditRow(order);
+    }
+}
+
